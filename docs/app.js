@@ -64,14 +64,14 @@ function renderPage(page) {
     var sign = row.change > 0 ? "+" : "";
     var tr = document.createElement("tr");
     tr.innerHTML =
-      "<td>" + row.date + "</td>" +
-      "<td>" + fmt(row.cash) + "</td>" +
-      '<td class="' + cls + '">' + arrow(row.change) + " " +
+      '<td data-label="Date">' + row.date + "</td>" +
+      '<td data-label="Cash">' + fmt(row.cash) + "</td>" +
+      '<td data-label="Change" class="' + cls + '">' + arrow(row.change) + " " +
         (row.change != null ? sign + fmt(row.change) : "-") + "</td>" +
-      '<td class="' + cls + '">' +
+      '<td data-label="Change %" class="' + cls + '">' +
         (row.change_pct != null ? sign + row.change_pct + "%" : "-") + "</td>" +
-      "<td>" + fmt(row.three_month) + "</td>" +
-      "<td>" + fmtInt(row.stock) + "</td>";
+      '<td data-label="3-Month">' + fmt(row.three_month) + "</td>" +
+      '<td data-label="Stock">' + fmtInt(row.stock) + "</td>";
     tbody.appendChild(tr);
   }
 
@@ -136,6 +136,160 @@ function pageBtn(num, current) {
   return btn;
 }
 
+/* ── 30-Day Chart ── */
+
+var priceChart = null;
+
+function linearRegression(ys) {
+  var n = ys.length;
+  var sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+  for (var i = 0; i < n; i++) {
+    sumX += i;
+    sumY += ys[i];
+    sumXY += i * ys[i];
+    sumX2 += i * i;
+  }
+  var slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  var intercept = (sumY - slope * sumX) / n;
+  return ys.map(function (_, i) {
+    return Math.round((intercept + slope * i) * 100) / 100;
+  });
+}
+
+function bollingerBands(ys, period) {
+  var n = ys.length;
+  var upper = [], lower = [];
+  for (var i = 0; i < n; i++) {
+    var start = Math.max(0, i - period + 1);
+    var win = ys.slice(start, i + 1);
+    var wMean = win.reduce(function (a, b) { return a + b; }, 0) / win.length;
+    var wStd = Math.sqrt(
+      win.reduce(function (a, v) { return a + (v - wMean) * (v - wMean); }, 0) / win.length
+    );
+    upper.push(Math.round((wMean + 2 * wStd) * 100) / 100);
+    lower.push(Math.round((wMean - 2 * wStd) * 100) / 100);
+  }
+  return { upper: upper, lower: lower };
+}
+
+function renderChart() {
+  var rows = allPrices
+    .filter(function (r) { return r.cash != null; })
+    .slice(0, 30)
+    .reverse();
+  if (rows.length < 2) return;
+
+  var isMobile = window.matchMedia("(max-width: 700px)").matches;
+  var labels = rows.map(function (r) { return r.date.slice(5); });
+  var prices = rows.map(function (r) { return r.cash; });
+  var trend = linearRegression(prices);
+  var bands = bollingerBands(prices, Math.min(20, rows.length));
+
+  var ctx = document.getElementById("price-chart").getContext("2d");
+  if (priceChart) priceChart.destroy();
+
+  priceChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Upper Band (+2\u03c3)",
+          data: bands.upper,
+          borderColor: "rgba(220,38,38,0.25)",
+          backgroundColor: "rgba(220,38,38,0.04)",
+          borderWidth: 1,
+          borderDash: [4, 3],
+          pointRadius: 0,
+          fill: false,
+          order: 3
+        },
+        {
+          label: "Lower Band (-2\u03c3)",
+          data: bands.lower,
+          borderColor: "rgba(22,163,74,0.25)",
+          backgroundColor: "rgba(22,163,74,0.04)",
+          borderWidth: 1,
+          borderDash: [4, 3],
+          pointRadius: 0,
+          fill: "-1",
+          order: 4
+        },
+        {
+          label: "Cash Settlement",
+          data: prices,
+          borderColor: "#2563eb",
+          backgroundColor: "rgba(37,99,235,0.08)",
+          borderWidth: 2.5,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          pointBackgroundColor: "#2563eb",
+          fill: false,
+          tension: 0.15,
+          order: 1
+        },
+        {
+          label: "Trend",
+          data: trend,
+          borderColor: "rgba(245,158,11,0.7)",
+          borderWidth: 2,
+          borderDash: [8, 4],
+          pointRadius: 0,
+          fill: false,
+          order: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        title: {
+          display: true,
+          text: "Cash Settlement \u2013 Last 30 Trading Days",
+          font: { size: isMobile ? 11 : 14, weight: "600" },
+          color: "#333",
+          padding: { bottom: isMobile ? 8 : 12 }
+        },
+        legend: {
+          position: isMobile ? "bottom" : "top",
+          labels: {
+            boxWidth: isMobile ? 10 : 14,
+            padding: isMobile ? 10 : 14,
+            font: { size: isMobile ? 10 : 11 },
+            usePointStyle: true
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function (c) {
+              return c.dataset.label + ": $" + fmt(c.raw);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            font: { size: isMobile ? 9 : 10 },
+            maxRotation: isMobile ? 0 : 45,
+            autoSkipPadding: isMobile ? 14 : 8
+          }
+        },
+        y: {
+          grid: { color: "rgba(0,0,0,0.06)" },
+          ticks: {
+            font: { size: isMobile ? 10 : 11 },
+            callback: function (v) { return "$" + v.toLocaleString(); }
+          }
+        }
+      }
+    }
+  });
+}
+
 // Load data
 fetch("data.json")
   .then(function (res) { return res.json(); })
@@ -143,6 +297,7 @@ fetch("data.json")
     allPrices = json.prices;
     stats = json.stats;
     renderSummary();
+    renderChart();
     renderPage(1);
   })
   .catch(function (e) {

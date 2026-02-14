@@ -11,6 +11,7 @@ body {
   background: #f5f5f5;
   color: #333;
   line-height: 1.5;
+  min-height: 100vh;
 }
 
 header {
@@ -32,17 +33,17 @@ header h1 {
 
 /* Summary cards */
 .summary-cards {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 1rem;
   padding: 1.2rem 2rem;
-  flex-wrap: wrap;
 }
 
 .card {
   background: #fff;
   border-radius: 6px;
   padding: 1rem 1.4rem;
-  min-width: 160px;
+  min-width: 0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
@@ -68,18 +69,41 @@ header h1 {
   font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
 }
 
+/* Chart */
+.chart-section {
+  padding: 0 2rem;
+}
+
+.chart-container {
+  background: #fff;
+  border-radius: 6px;
+  padding: 1.2rem 1.4rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.2rem;
+  position: relative;
+  height: 340px;
+}
+
 /* Table */
 main {
   padding: 0 2rem 2rem;
 }
 
+.table-wrap {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 table {
   width: 100%;
+  min-width: 740px;
   border-collapse: collapse;
   background: #fff;
   border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 thead tr {
@@ -143,6 +167,10 @@ tbody tr:hover {
   font-family: inherit;
 }
 
+td.loading::before {
+  content: none;
+}
+
 /* Pagination */
 .pagination {
   display: flex;
@@ -179,26 +207,169 @@ tbody tr:hover {
 }
 
 /* Responsive */
+@media (max-width: 900px) {
+  header,
+  .summary-cards,
+  .chart-section,
+  main {
+    padding-left: 1.2rem;
+    padding-right: 1.2rem;
+  }
+}
+
 @media (max-width: 700px) {
   header,
   .summary-cards,
+  .chart-section,
   main {
     padding-left: 1rem;
     padding-right: 1rem;
   }
 
+  header {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  header h1 {
+    font-size: 1.12rem;
+  }
+
+  .subtitle {
+    font-size: 0.74rem;
+  }
+
+  .chart-container {
+    height: 250px;
+    padding: 0.85rem 0.8rem;
+  }
+
   .summary-cards {
-    gap: 0.6rem;
+    gap: 0.55rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .card {
-    min-width: 120px;
-    flex: 1 1 calc(50% - 0.6rem);
+    border-radius: 10px;
+    padding: 0.82rem 0.86rem;
+    box-shadow: 0 2px 10px rgba(12, 20, 32, 0.08);
   }
 
-  th,
+  .card-label {
+    font-size: 0.68rem;
+  }
+
+  .card-value {
+    font-size: 1.04rem;
+  }
+
+  .card-change {
+    font-size: 0.76rem;
+  }
+
+  .table-wrap {
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  table {
+    min-width: 0;
+    background: transparent;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody {
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  tbody tr {
+    display: block;
+    background: #fff;
+    border: 1px solid #e4e9f1;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(12, 20, 32, 0.08);
+    overflow: hidden;
+  }
+
+  tbody tr:nth-child(even),
+  tbody tr:hover {
+    background: #fff;
+  }
+
   td {
-    padding: 0.45rem 0.5rem;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    text-align: right;
+    padding: 0.58rem 0.72rem;
+    font-size: 0.8rem;
+    border-bottom: 1px dashed #e8edf3;
+  }
+
+  td:last-child {
+    border-bottom: none;
+  }
+
+  td::before {
+    content: attr(data-label);
+    font-family: inherit;
+    text-transform: uppercase;
+    font-size: 0.67rem;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: #6b778b;
+    text-align: left;
+    margin-right: auto;
+  }
+
+  td:first-child {
+    font-weight: 600;
+  }
+
+  td.loading {
+    justify-content: center;
+    text-align: center;
+    border-bottom: none;
+    font-family: inherit;
+  }
+
+  td.loading::before {
+    content: none;
+  }
+
+  .pagination {
+    justify-content: flex-start;
+    gap: 0.35rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    margin-top: 0.9rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .pagination button {
+    flex: 0 0 auto;
+    min-width: 2.2rem;
+    min-height: 2rem;
+    padding: 0.45rem 0.7rem;
     font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-container {
+    height: 225px;
   }
 }
