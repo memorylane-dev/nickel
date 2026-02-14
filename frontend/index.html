@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coal - LME Nickel Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>LME Nickel Daily Prices</h1>
+    <p class="subtitle">Source: Westmetall / London Metal Exchange</p>
+  </header>
+
+  <section id="summary" class="summary-cards">
+    <div class="card">
+      <span class="card-label">Latest Cash</span>
+      <span id="latest-price" class="card-value">--</span>
+      <span id="latest-change" class="card-change">--</span>
+    </div>
+    <div class="card">
+      <span class="card-label">3-Month</span>
+      <span id="latest-3m" class="card-value">--</span>
+    </div>
+    <div class="card">
+      <span class="card-label">LME Stock</span>
+      <span id="latest-stock" class="card-value">--</span>
+    </div>
+    <div class="card">
+      <span class="card-label">Date</span>
+      <span id="latest-date" class="card-value">--</span>
+    </div>
+  </section>
+
+  <main>
+    <table id="price-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Cash Settlement</th>
+          <th>Change</th>
+          <th>Change %</th>
+          <th>3-Month</th>
+          <th>Stock (t)</th>
+        </tr>
+      </thead>
+      <tbody id="table-body">
+        <tr><td colspan="6" class="loading">Loading...</td></tr>
+      </tbody>
+    </table>
+
+    <nav id="pagination" class="pagination"></nav>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
