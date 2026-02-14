@@ -25,6 +25,9 @@ __pycache__/
 # Node
 node_modules/
 
+# Data
+data/
+
 # Build and artifacts
 build/
 dist/
