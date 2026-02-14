@@ -1,18 +1,22 @@
+from __future__ import annotations
+
+from typing import List, Optional
+
 from pydantic import BaseModel
 
 
 class PriceRecord(BaseModel):
     id: int
     date: str
-    cash_settlement: float | None
-    three_month: float | None
-    stock: int | None
-    cash_change: float | None
-    cash_change_pct: float | None
+    cash_settlement: Optional[float] = None
+    three_month: Optional[float] = None
+    stock: Optional[int] = None
+    cash_change: Optional[float] = None
+    cash_change_pct: Optional[float] = None
 
 
 class PriceListResponse(BaseModel):
-    data: list[PriceRecord]
+    data: List[PriceRecord]
     page: int
     per_page: int
     total: int
@@ -20,9 +24,9 @@ class PriceListResponse(BaseModel):
 
 
 class StatsResponse(BaseModel):
-    min_price: float | None
-    max_price: float | None
-    avg_price: float | None
-    first_date: str | None
-    last_date: str | None
+    min_price: Optional[float] = None
+    max_price: Optional[float] = None
+    avg_price: Optional[float] = None
+    first_date: Optional[str] = None
+    last_date: Optional[str] = None
     total_records: int

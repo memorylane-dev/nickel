@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import re
 from datetime import datetime
+from typing import Optional
 
 import httpx
 from bs4 import BeautifulSoup
@@ -16,14 +19,14 @@ def parse_date(raw: str) -> str:
     return dt.strftime("%Y-%m-%d")
 
 
-def parse_price(raw: str) -> float | None:
+def parse_price(raw: str) -> Optional[float]:
     text = raw.strip()
     if not text or text == "-":
         return None
     return float(text.replace(",", ""))
 
 
-def parse_stock(raw: str) -> int | None:
+def parse_stock(raw: str) -> Optional[int]:
     text = raw.strip()
     if not text or text == "-":
         return None

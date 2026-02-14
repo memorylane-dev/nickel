@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import logging
 import math
 from contextlib import asynccontextmanager
+from typing import Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, Query
@@ -51,7 +54,7 @@ async def api_prices(
     )
 
 
-@app.get("/api/prices/latest", response_model=PriceRecord | None)
+@app.get("/api/prices/latest", response_model=Optional[PriceRecord])
 async def api_latest():
     row = await get_latest()
     return PriceRecord(**row) if row else None

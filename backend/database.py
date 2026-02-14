@@ -1,4 +1,8 @@
+from __future__ import annotations
+
 import os
+from typing import Optional
+
 import aiosqlite
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "nickel.db")
@@ -55,7 +59,7 @@ async def get_prices(page: int = 1, per_page: int = 30) -> list[dict]:
         return [dict(r) for r in rows]
 
 
-async def get_latest() -> dict | None:
+async def get_latest() -> Optional[dict]:
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
         cursor = await db.execute(
