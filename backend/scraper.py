@@ -41,41 +41,39 @@ async def scrape_westmetall() -> int:
 
     soup = BeautifulSoup(resp.text, "lxml")
 
-    # First table with thead containing "date" header
-    table = None
-    for t in soup.find_all("table"):
-        th = t.find("th")
-        if th and "date" in th.get_text(strip=True).lower():
-            table = t
-            break
+    # All tables with thead containing "date" header (one per year)
+    tables = [
+        t for t in soup.find_all("table")
+        if t.find("th") and "date" in t.find("th").get_text(strip=True).lower()
+    ]
 
-    if table is None:
-        raise ValueError("Could not find price table on Westmetall page")
-
-    tbody = table.find("tbody")
-    if tbody is None:
-        raise ValueError("No tbody found in price table")
+    if not tables:
+        raise ValueError("Could not find price tables on Westmetall page")
 
     rows_data: list[dict] = []
-    for tr in tbody.find_all("tr"):
-        cells = tr.find_all("td")
-        if len(cells) < 4:
+    for table in tables:
+        tbody = table.find("tbody")
+        if tbody is None:
             continue
-        try:
-            date = parse_date(cells[0].get_text())
-            cash = parse_price(cells[1].get_text())
-            three_month = parse_price(cells[2].get_text())
-            stock = parse_stock(cells[3].get_text())
-            rows_data.append({
-                "date": date,
-                "cash_settlement": cash,
-                "three_month": three_month,
-                "stock": stock,
-                "cash_change": None,
-                "cash_change_pct": None,
-            })
-        except (ValueError, IndexError):
-            continue
+        for tr in tbody.find_all("tr"):
+            cells = tr.find_all("td")
+            if len(cells) < 4:
+                continue
+            try:
+                date = parse_date(cells[0].get_text())
+                cash = parse_price(cells[1].get_text())
+                three_month = parse_price(cells[2].get_text())
+                stock = parse_stock(cells[3].get_text())
+                rows_data.append({
+                    "date": date,
+                    "cash_settlement": cash,
+                    "three_month": three_month,
+                    "stock": stock,
+                    "cash_change": None,
+                    "cash_change_pct": None,
+                })
+            except (ValueError, IndexError):
+                continue
 
     # Sort by date ascending to compute changes
     rows_data.sort(key=lambda r: r["date"])
